@@ -12,6 +12,12 @@ class Othello():
         self.playerTurn = 0
         self.validMoves = []
 
+    def outOfBounds(row, col):
+        if (row < 0 or row >= self.rows or col < 0 or col >- self.cols):
+            return 1
+
+        return 0
+
     def isMoveValid(self, move):
         row = move[0]
         col = move[1]
@@ -19,8 +25,28 @@ class Othello():
         if self.board[row][col] != 0:
             return 0
 
-        
+        directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
 
+        for dir in directions:
+            checkRow = row + dir[0]
+            checkCol = col + dir[1]
+
+            if self.outOfBounds(checkRow, checkCol):
+                continue
+
+            if self.board[checkRow][checkCol] == -1*self.playerTurn:
+                checkRow += dir[0]
+                checkCol += dir[1]
+
+                while ((not self.outOfBounds(checkRow, checkCol)) and
+                    self.board[checkRow][checkCol] == -1*self.playerTurn):
+                    checkRow += dir[0]
+                    checkCol += dir[1]
+
+                if (not self.outOfBounds(checkRow, checkCol)):
+                    return 1
+
+        return 0
 
 
     def newGame(self):
@@ -39,6 +65,7 @@ class Othello():
         self.playerTurn = 1
 
     def playMove(self, move):
-
+        if self.isMoveValid(move):
+            self.board[move[0]][move[1]] = self.playerTurn
 
         self.playerTurn *= -1
