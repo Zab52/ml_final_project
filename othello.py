@@ -10,14 +10,14 @@ class Othello():
     def __init__(self, cols, rows):
         self.cols = cols
         self.rows = rows
-        self.board = [[0]*cols] * rows
-        self.playerTurn = 0
-        self.end = 0
+        self.board = [[0 for i in range(cols)] for j in range(rows)]
+        self.playerTurn = 1
+        self.end = False
         self.winner = 0
 
     # Function to check if a move is outside the board.
-    def outOfBounds(row, col):
-        if (row < 0 or row >= self.rows or col < 0 or col >- self.cols):
+    def outOfBounds(self,row, col):
+        if (row < 0 or row >= self.rows or col < 0 or col >= self.cols):
             return 1
 
         return 0
@@ -26,8 +26,7 @@ class Othello():
     # the given game of Othello. Returns 1 if the move is valid. Otherwise,
     # returns 0.
     def isMoveValid(self, move):
-        row = move[0]
-        col = move[1]
+        row, col = move
 
         # Checking to see if the specified move on the board is empty.
         if self.board[row][col] != 0:
@@ -36,30 +35,29 @@ class Othello():
         directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
 
         # Checking around the move specified to check if it is valid.
-        for dir in directions:
-
+        for v,h in directions:
             # Checking each of the adjacent tiles of the board.
-            checkRow = row + dir[0]
-            checkCol = col + dir[1]
+            checkRow = row + h
+            checkCol = col + v
 
-            # Case where the tile checked is outside of the board.
-            if self.outOfBounds(checkRow, checkCol):
-                continue
-
-            # Case where an adjacent tile an opponent's piece.
-            if self.board[checkRow][checkCol] == -1*self.playerTurn:
-                checkRow += dir[0]
-                checkCol += dir[1]
+            #check that theres one other piece first
+            if ((not self.outOfBounds(checkRow, checkCol)) and
+                self.board[checkRow][checkCol] == -1*self.playerTurn):
+                checkRow += v
+                checkCol += h
 
                 # Continuing in the same direction until a tile is found that
                 # is either out of bounds, or not an opponent's piece.
                 while ((not self.outOfBounds(checkRow, checkCol)) and
                     self.board[checkRow][checkCol] == -1*self.playerTurn):
-                    checkRow += dir[0]
-                    checkCol += dir[1]
+                    checkRow += v
+                    checkCol += h
 
+                print(checkRow,checkCol)
+                # Checking each of the adjacent tiles of the board.
                 # Case where the move must be valid.
-                if (not self.outOfBounds(checkRow, checkCol)):
+                if ((not self.outOfBounds(checkRow, checkCol)) and
+                    self.board[checkRow][checkCol] == self.playerTurn):
                     return 1
 
         # Move isn't valid.
@@ -72,8 +70,8 @@ class Othello():
             for i in range(self.cols):
                 row[i] = 0
 
-        midRow = self.rows/2 -1
-        midCol = self.col/2 -1
+        midRow = self.rows//2 -1
+        midCol = self.cols//2 -1
 
         self.board[midRow][midCol] = 1
         self.board[midRow + 1][midCol+1] = 1
@@ -81,7 +79,7 @@ class Othello():
         self.board[midRow][midCol+1] = -1
 
         self.playerTurn = 1
-        self.end = 0
+        self.end = False
 
     # Function to check if the current player has any valid moves.
     def searchMoves(self):
@@ -96,7 +94,7 @@ class Othello():
     # returns the winner (-1 or 1).
     def gameOver(self):
         score = 0
-        self.end = 1
+        self.end = True
 
         # Evaluating the current board.
         for n in range(self.rows):
