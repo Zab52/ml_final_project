@@ -1,48 +1,82 @@
-#import tkinter as tk
-
-#window = tk.Tk()
-# Code to add widgets will go here...
-
-#game = Othello(8,8)
-import tkinter
+import tkinter as tk
 from othello import Othello
 
 size = 80 #the size of a cell in pixels
 
+class GUI():
 
-top = tkinter.Tk()
+    def __init__(self):
+        self.root = tk.Tk()
+        self.btn = tk.Button(self.root, text = 'New Game', bd = '5')
+        self.btn.bind("<Button-1>", self.new_game)
+        self.game = Othello(8,8)
+        self.game.newGame()
+        self.size = 80
+        self.canvas = tk.Canvas(self.root, bg="green", height=self.size*self.game.cols,
+                                     width=self.size*self.game.rows)
+        self.make_canvas()
+        self.update_game()
+        self.canvas.bind("<Button-1>", self.make_move)
+        self.scoreboard = tk.Label(self.root)
+        self.show_score()
+        self.last_move = None
+        self.turn_label = tk.Label()
+        self.update_turn()
+        self.btn.pack()
+        self.canvas.pack()
+        self.scoreboard.pack()
+        self.turn_label.pack()
+        self.root.mainloop()
 
-game = Othello(8,8)
-game.newGame()
 
-canvas = tkinter.Canvas(top, bg="green", height=size*game.cols, width=size*game.rows)
+    def new_game(self,event):
+        self.root.destroy()
+        self.__init__()
 
-for i in range(game.rows + 1):
-    line = canvas.create_line(0, i*size, size*game.cols , i*size, fill='black')
+    def make_canvas(self):
+        for i in range(self.game.rows + 1):
+            line = self.canvas.create_line(0, i*self.size, self.size*self.game.cols , i*self.size, fill='black')
 
-for i in range(game.rows + 1):
-    line = canvas.create_line(i*size, 0, i*size, size*game.cols, fill='black')
+        for i in range(self.game.rows + 1):
+            line = self.canvas.create_line(i*self.size, 0, i*self.size, self.size*self.game.cols, fill='black')
+
+    def show_score(self):
+        white, black = self.game.score()
+        self.scoreboard.configure(text=f'White: {white}, Black: {black}')
+
+    def update_turn(self):
+        if self.game.end:
+            if self.game.winner == 0:
+                self.turn_label.configure(text='Game Over. It\'s a tie!')
+            else:
+                winner = 'White' if self.game.winner == 1 else 'Black'
+                self.turn_label.configure(text=f'Game Over. {winner} won!')
+        else:
+            player = 'White' if self.game.playerTurn == 1 else 'Black'
+            self.turn_label.configure(text=f'Last Move: {self.last_move}. It is now {player}\'s turn.')
 
 
-def update_game():
-    for i in range(game.cols):
-        for j in range(game.rows):
-            if game.board[i][j] == 1:
-                canvas.create_oval(i*size+1, j*size+1, (i+1)*size-1, (j+1)*size-1,fill='white')
-            elif game.board[i][j] == -1:
-                canvas.create_oval(i*size+1, j*size+1, (i+1)*size-1, (j+1)*size-1,fill='black')
+    def update_game(self):
+        for i in range(self.game.cols):
+            for j in range(self.game.rows):
+                if self.game.board[i][j] == 1:
+                    self.canvas.create_oval(i*self.size+1, j*self.size+1, (i+1)*self.size-1, (j+1)*self.size-1,fill='white')
+                elif self.game.board[i][j] == -1:
+                    self.canvas.create_oval(i*self.size+1, j*self.size+1, (i+1)*self.size-1, (j+1)*self.size-1,fill='black')
 
-def make_move(event):
-    move = event.y//size, event.x//size
-    print('Move', move)
-    if game.isMoveValid(move):
-        print('made it')
-        game.playMove(move)
-        update_game()
 
-canvas.bind("<Button-1>", make_move)
+    def make_move(self,event):
+        if self.game.playerTurn == -1:
+            move = event.y//size, event.x//size
+        else:
+            move = self.game.white.get_move()
+        print(move)
+        if self.game.isMoveValid(move):
+            self.last_move = move
+            self.game.playMove(move)
+            self.update_game()
+            self.show_score()
+            self.update_turn()
 
-update_game()
 
-canvas.pack()
-top.mainloop()
+app = GUI()

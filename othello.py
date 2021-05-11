@@ -2,6 +2,7 @@ import sys
 import math
 import random
 import copy
+from player import Player
 
 # Class to store a game of Othello.
 class Othello():
@@ -11,6 +12,8 @@ class Othello():
         self.cols = cols
         self.rows = rows
         self.board = [[0 for i in range(cols)] for j in range(rows)]
+        self.black = Player(self)
+        self.white = Player(self)
         self.playerTurn = 1
         self.end = False
         self.winner = 0
@@ -119,7 +122,7 @@ class Othello():
         self.board[midRow+1][midCol] = -1
         self.board[midRow][midCol+1] = -1
 
-        self.playerTurn = 1
+        self.playerTurn = -1
         self.end = False
 
     # Function to check if the current player has any valid moves.
@@ -147,7 +150,19 @@ class Othello():
             self.winner = -1
         elif score > 0:
             self.winner = 1
-        self.winner = 0
+        else:
+            self.winner = 0
+
+    #find the score at a certain point
+    def score(self):
+        white, black = 0,0
+        for row in self.board:
+            for col in row:
+                if col == 1:
+                    white += 1
+                elif col ==-1:
+                    black += 1
+        return white, black
 
     # Function to play a given move. If a moved is played, also checks if the
     # game has ended, or if the next player doesn't have any valid moves.
@@ -166,3 +181,12 @@ class Othello():
             return 1
         else:
             return 0
+
+    #return a list of valid moves
+    def find_moves(self):
+        moves = []
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.isMoveValid((i,j)):
+                    moves.append((i,j))
+        return moves
