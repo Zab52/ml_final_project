@@ -12,7 +12,8 @@ class Othello():
         self.rows = rows
         self.board = [[0]*cols] * rows
         self.playerTurn = 0
-        self.validMoves = []
+        self.end = 0
+        self.winner = 0
 
     # Function to check if a move is outside the board.
     def outOfBounds(row, col):
@@ -80,10 +81,49 @@ class Othello():
         self.board[midRow][midCol+1] = -1
 
         self.playerTurn = 1
+        self.end = 0
 
-    # Function to play a given move.
+    # Function to check if the current player has any valid moves.
+    def searchMoves(self):
+        for n in range(self.rows):
+            for i in range(self.cols):
+                if self.isMoveValid((n,i)):
+                    return 1
+
+        return 0
+
+    # Called when the game is over. Returns 0 if the game is a draw. Otherwise
+    # returns the winner (-1 or 1).
+    def gameOver(self):
+        score = 0
+        self.end = 1
+
+        # Evaluating the current board.
+        for n in range(self.rows):
+            for i in range(self.cols):
+                score += self.board[n][i]
+
+        # Determining the winner.
+        if score < 0:
+            self.winner = -1
+        elif score > 0:
+            self.winner = 1
+        self.winner = 0
+
+    # Function to play a given move. If a moved is played, also checks if the
+    # game has ended, or if the next player doesn't have any valid moves.
+    # Returns 1 if the move was valid, otherwise, returns 0.
     def playMove(self, move):
         if self.isMoveValid(move):
             self.board[move[0]][move[1]] = self.playerTurn
+            self.playerTurn *= -1
 
-        self.playerTurn *= -1
+            # Checking to see if the players have valid moves.
+            if not self.searchMoves():
+                self.playerTurn *= -1
+                if not self.searchMoves():
+                    self.gameOver()
+
+            return 1
+        else:
+            return 0
