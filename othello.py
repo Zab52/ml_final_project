@@ -2,21 +2,32 @@ import sys
 import math
 import random
 import copy
-from player import Player
+from player import Player, RandomPlayer, HeurPlayer, UserPlayer, TDPlayer
 
 # Class to store a game of Othello.
 class Othello():
 
     # Initializing the Othello game for any size board.
-    def __init__(self, cols, rows):
+    def __init__(self, cols, rows, white, black):
         self.cols = cols
         self.rows = rows
         self.board = [[0 for i in range(cols)] for j in range(rows)]
-        self.black = Player(self)
-        self.white = Player(self)
-        self.playerTurn = 1
+        self.black = self.make_user(black,-1)
+        self.white = self.make_user(white,1)
+        self.playerTurn = 0
         self.end = False
         self.winner = 0
+
+    #create our players based on arguments passed in
+    def make_user(self,player,i):
+        if player == 'user':
+            return UserPlayer(self,i)
+        elif player == 'random':
+            return RandomPlayer(self,i)
+        elif player == 'heur':
+            return HeurPlayer(self,i)
+        else:
+            return TDPlayer(self,i)
 
     # Function to check if a move is outside the board.
     def outOfBounds(self,row, col):
@@ -153,7 +164,7 @@ class Othello():
         else:
             self.winner = 0
 
-    #find the score at a certain point
+    #find the score at a certain point in the game
     def score(self):
         white, black = 0,0
         for row in self.board:
@@ -168,19 +179,15 @@ class Othello():
     # game has ended, or if the next player doesn't have any valid moves.
     # Returns 1 if the move was valid, otherwise, returns 0.
     def playMove(self, move):
-        if self.isMoveValid(move):
-            self.updateBoard(move[0], move[1])
+        self.updateBoard(move[0], move[1])
+        self.playerTurn *= -1
+
+        # Checking to see if the players have valid moves.
+        if not self.searchMoves():
             self.playerTurn *= -1
-
-            # Checking to see if the players have valid moves.
             if not self.searchMoves():
-                self.playerTurn *= -1
-                if not self.searchMoves():
-                    self.gameOver()
-
-            return 1
-        else:
-            return 0
+                self.gameOver()
+        return 1
 
     #return a list of valid moves
     def find_moves(self):
@@ -190,3 +197,12 @@ class Othello():
                 if self.isMoveValid((i,j)):
                     moves.append((i,j))
         return moves
+
+    #make the next move
+    def next_move(self,move):
+        if self.end:
+            return False
+        if self.playerTurn == -1:
+            return self.black.make_move(move)
+        else:
+            return self.white.make_move(move)
