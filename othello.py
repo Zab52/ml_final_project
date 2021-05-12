@@ -11,18 +11,18 @@ class Othello():
 
     # Initializing the Othello game for any size board.
     def __init__(self, cols, rows, white, black, ann=None,learning=False,
-                 explorationRate=0):
+                 explorationRate=0, filename=None):
         self.cols = cols
         self.rows = rows
         self.board = [[0 for i in range(cols)] for j in range(rows)]
-        self.black = self.make_user(black,-1,ann,learning,explorationRate)
-        self.white = self.make_user(white,1,ann,learning,explorationRate)
+        self.black = self.make_user(black,-1,ann,learning,explorationRate, filename)
+        self.white = self.make_user(white,1,ann,learning,explorationRate, filename)
         self.playerTurn = 0
         self.end = False
         self.winner = 0
 
     #create our players based on arguments passed in
-    def make_user(self,player,i,ann,learning,explorationRate):
+    def make_user(self,player,i,ann,learning,explorationRate, filename):
         if player == 'user':
             return UserPlayer(self,i)
         elif player == 'random':
@@ -30,8 +30,8 @@ class Othello():
         elif player == 'heur':
             return HeurPlayer(self,i)
         else:
-            if ann:
-                with open(ann,'rb') as filehandler:
+            if filename:
+                with open(filename,'rb') as filehandler:
                     ann = pickle.load(filehandler)
             return TDPlayer(self,i,ann=ann,learning=learning,explorationFactor=explorationRate)
 
@@ -225,12 +225,12 @@ if __name__ == '__main__':
     with open('four_by_four_ann.obj', 'wb') as filehandler:
         pickle.dump(ann, filehandler)
     """
-    with open('four_by_four_ann.obj', 'rb') as filehandler:
+    with open('ann.obj', 'rb') as filehandler:
         ann = pickle.load(filehandler)
     white, black = 0,0
-    for i in range(1000):
+    for i in range(3000):
         print(i)
-        game = Othello(4,4,'random','random',ann)
+        game = Othello(4,4,'random','td',ann=ann)
         game.newGame()
         while not game.end:
             game.next_move(None)

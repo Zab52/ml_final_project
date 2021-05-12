@@ -8,11 +8,11 @@ size = 80 #the size of a cell in pixels
 class GUI():
 
     def __init__(self, squares, white, black,ann):
-        self.squares, self.white, self.black = squares, white, black
+        self.squares, self.white, self.black, self.ann = squares, white, black, ann
         self.root = tk.Tk()
         self.btn = tk.Button(self.root, text = 'New Game', bd = '5')
         self.btn.bind("<Button-1>", self.new_game)
-        self.game = Othello(squares,squares,white,black,ann=ann)
+        self.game = Othello(squares,squares,white,black,filename=ann)
         self.game.newGame()
         self.size = 80
         self.canvas = tk.Canvas(self.root, bg="green", height=self.size*self.game.cols,
@@ -33,7 +33,7 @@ class GUI():
 
     def new_game(self,event):
         self.root.destroy()
-        self.__init__(self.squares,self.white,self.black)
+        self.__init__(self.squares,self.white,self.black, self.ann)
 
     def make_canvas(self):
         for i in range(self.game.rows + 1):

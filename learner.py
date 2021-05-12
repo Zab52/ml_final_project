@@ -26,6 +26,9 @@ if __name__ == '__main__':
     explo = args.explorationRate
 
     for i in range(args.games):
+        if i%1000 == 0:
+            with open('backup' + str(int(i/1000)) + '.obj', 'wb') as filehandler:
+                pickle.dump(ann, filehandler)
         newExplo = explo * (1-(i/args.games))
         print('Game', i)
         game = Othello(args.squares,args.squares,'td','td',ann=ann,learning=True,
