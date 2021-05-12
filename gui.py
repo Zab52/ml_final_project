@@ -1,17 +1,18 @@
 import tkinter as tk
 import argparse
+import pickle
 from othello import Othello
 
 size = 80 #the size of a cell in pixels
 
 class GUI():
 
-    def __init__(self, squares, white, black):
+    def __init__(self, squares, white, black,ann):
         self.squares, self.white, self.black = squares, white, black
         self.root = tk.Tk()
         self.btn = tk.Button(self.root, text = 'New Game', bd = '5')
         self.btn.bind("<Button-1>", self.new_game)
-        self.game = Othello(squares,squares,white,black)
+        self.game = Othello(squares,squares,white,black,ann=ann)
         self.game.newGame()
         self.size = 80
         self.canvas = tk.Canvas(self.root, bg="green", height=self.size*self.game.cols,
@@ -83,6 +84,7 @@ if __name__ == '__main__':
                         default='user', choices=['user', 'random', 'heur', 'td'])
     parser.add_argument("-white", help="The type of the white player",
                         default='random', choices=['user', 'random', 'heur', 'td'])
+    parser.add_argument("-ann", help="The filename storing the pickled ann",default=None)
     args = parser.parse_args()
 
-    app = GUI(args.squares,args.white,args.black)
+    app = GUI(args.squares,args.white,args.black,args.ann)

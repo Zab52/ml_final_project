@@ -2,24 +2,27 @@ import sys
 import math
 import random
 import copy
+import pickle
+from backpropagation import ANN
 from player import Player, RandomPlayer, HeurPlayer, UserPlayer, TDPlayer
 
 # Class to store a game of Othello.
 class Othello():
 
     # Initializing the Othello game for any size board.
-    def __init__(self, cols, rows, white, black):
+    def __init__(self, cols, rows, white, black, ann=None,learning=False,
+                 explorationRate=0):
         self.cols = cols
         self.rows = rows
         self.board = [[0 for i in range(cols)] for j in range(rows)]
-        self.black = self.make_user(black,-1)
-        self.white = self.make_user(white,1)
+        self.black = self.make_user(black,-1,ann,learning,explorationRate)
+        self.white = self.make_user(white,1,ann,learning,explorationRate)
         self.playerTurn = 0
         self.end = False
         self.winner = 0
 
     #create our players based on arguments passed in
-    def make_user(self,player,i):
+    def make_user(self,player,i,ann,learning,explorationRate):
         if player == 'user':
             return UserPlayer(self,i)
         elif player == 'random':
@@ -27,7 +30,10 @@ class Othello():
         elif player == 'heur':
             return HeurPlayer(self,i)
         else:
-            return TDPlayer(self,i)
+            if ann:
+                with open(ann,'rb') as filehandler:
+                    ann = pickle.load(filehandler)
+            return TDPlayer(self,i,ann=ann,learning=learning,explorationFactor=explorationRate)
 
     # Function to check if a move is outside the board.
     def outOfBounds(self,row, col):
@@ -199,58 +205,39 @@ class Othello():
         return moves
 
     #make the next move
-    def next_move(self,move):
+    def next_move(self,user_move):
         if self.end:
             return False
         if self.playerTurn == -1:
-            return self.black.make_move(move)
+            return self.black.make_move(user_move)
         else:
-            return self.white.make_move(move)
+            return self.white.make_move(user_move)
 
-    def nextBoard(self, move):
-        board = copy.deepcopy(self.board)
-        row = move[0]
-        col = move[1]
+if __name__ == '__main__':
+    """
+    ann = ANN(16,10,1,0.01)
+    for i in range(50000):
+        print(i)
+        game = Othello(4,4,'td','td',ann)
+        game.newGame()
+        while not game.end:
+            game.next_move(None)
+    with open('four_by_four_ann.obj', 'wb') as filehandler:
+        pickle.dump(ann, filehandler)
+    """
+    with open('four_by_four_ann.obj', 'rb') as filehandler:
+        ann = pickle.load(filehandler)
+    white, black = 0,0
+    for i in range(1000):
+        print(i)
+        game = Othello(4,4,'random','random',ann)
+        game.newGame()
+        while not game.end:
+            game.next_move(None)
+        if game.winner == 1:
+            white += 1
+        elif game.winner == -1:
+            black += 1
 
-        board[col][row] = self.playerTurn
-
-        directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
-
-        # Checking around the move specified to check if it is valid.
-        for v,h in directions:
-            # Checking each of the adjacent tiles of the board.
-            checkRow = row + v
-            checkCol = col + h
-
-            count = 0
-
-            #check that theres one other piece first
-            if ((not self.outOfBounds(checkRow, checkCol)) and
-                board[checkCol][checkRow] == -1*self.playerTurn):
-                checkRow += v
-                checkCol += h
-                count += 1
-
-                # Continuing in the same direction until a tile is found that
-                # is either out of bounds, or not an opponent's piece.
-                while ((not self.outOfBounds(checkRow, checkCol)) and
-                    board[checkCol][checkRow] == -1*self.playerTurn):
-                    checkRow += v
-                    checkCol += h
-                    count += 1
-
-                # Checking each of the adjacent tiles of the board.
-                # Case where the move must be valid.
-                if ((not self.outOfBounds(checkRow, checkCol)) and
-                    board[checkCol][checkRow] == self.playerTurn):
-                        checkRow -= v
-                        checkCol -= h
-
-
-                        while count > 0:
-                            board[checkCol][checkRow] = self.playerTurn
-                            checkRow -= v
-                            checkCol -= h
-                            count -= 1
-
-        return board
+    print('White:', white)
+    print('Black', black)
