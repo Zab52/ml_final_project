@@ -206,3 +206,51 @@ class Othello():
             return self.black.make_move(move)
         else:
             return self.white.make_move(move)
+
+    def nextBoard(self, move):
+        board = copy.deepcopy(self.board)
+        row = move[0]
+        col = move[1]
+
+        board[col][row] = self.playerTurn
+
+        directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
+
+        # Checking around the move specified to check if it is valid.
+        for v,h in directions:
+            # Checking each of the adjacent tiles of the board.
+            checkRow = row + v
+            checkCol = col + h
+
+            count = 0
+
+            #check that theres one other piece first
+            if ((not self.outOfBounds(checkRow, checkCol)) and
+                board[checkCol][checkRow] == -1*self.playerTurn):
+                checkRow += v
+                checkCol += h
+                count += 1
+
+                # Continuing in the same direction until a tile is found that
+                # is either out of bounds, or not an opponent's piece.
+                while ((not self.outOfBounds(checkRow, checkCol)) and
+                    board[checkCol][checkRow] == -1*self.playerTurn):
+                    checkRow += v
+                    checkCol += h
+                    count += 1
+
+                # Checking each of the adjacent tiles of the board.
+                # Case where the move must be valid.
+                if ((not self.outOfBounds(checkRow, checkCol)) and
+                    board[checkCol][checkRow] == self.playerTurn):
+                        checkRow -= v
+                        checkCol -= h
+
+
+                        while count > 0:
+                            board[checkCol][checkRow] = self.playerTurn
+                            checkRow -= v
+                            checkCol -= h
+                            count -= 1
+
+        return board

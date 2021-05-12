@@ -1,10 +1,11 @@
 from backpropagation import ANN
 from othello import Othello
+import random
 
 class TDZero():
-    def __init__(self, inpNum, hiddenNum, outNum, learningRate, discountFactor,
+    def __init__(self, inpNum, hiddenNum, learningRate, discountFactor,
         explorationFactor):
-        self.evalNetwork = ANN(inpNum, hiddenNum, outNum, learningRate)
+        self.evalNetwork = ANN(inpNum, hiddenNum, 1, learningRate)
 
         self.discountFactor = discountFactor
         self.explorationFactor = explorationFactor
@@ -13,54 +14,62 @@ class TDZero():
         input = []
 
         for row in board:
-            for i in range(numcols):
+            for i in range(numCols):
                 input.append(row[i]*turn)
 
         return input
 
-    def selectMove(self, nextMoves, output, numCols):
+    def selectMove(self, nextMoves, game):
 
         if random.random() < self.explorationFactor:
-            return nextMoves[random.randint(0, len(nextMoves) - 1)]
+            bestMove = nextMoves[random.randint(0, len(nextMoves) - 1)]
+            board = game.nextBoard(bestMove)
+            input = create_input_vector(board, game.cols, game.turn)
+            return bestMove,self.evalNetwork.classify(input)[0]
+
 
         best = float('-inf')
 
         for move in nextMoves:
-            row = move[0]
-            col = move[1]
+            board = game.nextBoard(move)
+            input = self.create_input_vector(board, game.cols, game.playerTurn)
+            current = self.evalNetwork.classify(input)[0]
 
-            compare = output[row*numCols + col]
-            if compare > best:
-                best = compare
+            if best < current:
+                best = current
                 bestMove = move
 
-        return bestMove
+
+        return bestMove,best
 
     def learn(self, game):
-        color = game.turn
-        input = self.create_input_vector(game.board, game.cols, color)
+        input = self.create_input_vector(game.board, game.cols, game.playerTurn)
 
         valid_moves = game.find_moves()
 
-        output = self.evalNetwork.classify(input)
+        output = self.evalNetwork.classify(input)[0]
 
-        move = self.selectMove(valid_moves, output, game.cols)
+        move,newOutput = self.selectMove(valid_moves, game)
 
         game.playMove(move)
-
-        newInput = self.create_input_vector(game.board, game.cols, color)
-
-        newOutput = self.evalNetwork.classify(newInput)
 
         if game.end:
             reward = .5
 
-            if game.winner == color:
+            if game.winner == turn:
                 reward = 1
-            elif game.winner == -1*color:
+            elif game.winner == -1*turn:
                 reward = 0
 
-            for i in range(len(newOutput)):
-                newOutput[i] = reward + self.discountFactor*newOutput[i]
+            newOutput += reward
 
-        self.evalNetwork(input, newOutput)
+        self.evalNetwork.backpropagate(input, [newOutput])
+
+
+testing  = TDZero(64, 50, .001, 1, .1)
+
+game = Othello(8,8, 'user', 'user')
+
+game.newGame()
+
+testing.learn(game)
