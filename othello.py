@@ -24,6 +24,7 @@ class Othello():
         self.playerTurn = 0
         self.end = False
         self.winner = 0
+        self.openMoves = []
 
     #create our players based on arguments passed in
     def make_user(self,player,i,ann,learning,explorationRate, filename):
@@ -90,6 +91,8 @@ class Othello():
     def updateBoard(self, row, col):
         self.board[col][row] = self.playerTurn
 
+        self.openMoves.remove((row, col))
+
         directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
 
         # Checking around the move specified to check if it is valid.
@@ -144,15 +147,20 @@ class Othello():
         self.board[midRow+1][midCol] = -1
         self.board[midRow][midCol+1] = -1
 
+
+        for i in range(self.rows):
+            for n in range(self.cols):
+                if self.board[i][n] == 0:
+                    self.openMoves.append((i,n))
+
         self.playerTurn = -1
         self.end = False
 
     # Function to check if the current player has any valid moves.
     def searchMoves(self):
-        for n in range(self.rows):
-            for i in range(self.cols):
-                if self.isMoveValid((n,i)):
-                    return 1
+        for move in self.openMoves:
+            if self.isMoveValid(move):
+                return 1
 
         return 0
 
@@ -203,10 +211,11 @@ class Othello():
     #return a list of valid moves
     def find_moves(self):
         moves = []
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.isMoveValid((i,j)):
-                    moves.append((i,j))
+        for move in self.openMoves:
+            if self.isMoveValid(move):
+                moves.append(move)
+
+
         return moves
 
     #make the next move
@@ -217,6 +226,58 @@ class Othello():
             return self.black.make_move(user_move)
         else:
             return self.white.make_move(user_move)
+
+
+    def simulate_next_move(self, move):
+
+        board = copy.deepcopy(self.board)
+
+        row = move[0]
+        col = move[1]
+
+        board[col][row] = self.playerTurn
+
+        directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
+
+        # Checking around the move specified to check if it is valid.
+        for v,h in directions:
+            # Checking each of the adjacent tiles of the board.
+            checkRow = row + v
+            checkCol = col + h
+
+            count = 0
+
+            #check that theres one other piece first
+            if ((not self.outOfBounds(checkRow, checkCol)) and
+                board[checkCol][checkRow] == -1*self.playerTurn):
+                checkRow += v
+                checkCol += h
+                count += 1
+
+                # Continuing in the same direction until a tile is found that
+                # is either out of bounds, or not an opponent's piece.
+                while ((not self.outOfBounds(checkRow, checkCol)) and
+                    board[checkCol][checkRow] == -1*self.playerTurn):
+                    checkRow += v
+                    checkCol += h
+                    count += 1
+
+                # Checking each of the adjacent tiles of the board.
+                # Case where the move must be valid.
+                if ((not self.outOfBounds(checkRow, checkCol)) and
+                    board[checkCol][checkRow] == self.playerTurn):
+                        checkRow -= v
+                        checkCol -= h
+
+
+                        while count > 0:
+                            board[checkCol][checkRow] = self.playerTurn
+                            checkRow -= v
+                            checkCol -= h
+                            count -= 1
+
+        return board
+
 
 if __name__ == '__main__':
     """
@@ -230,12 +291,12 @@ if __name__ == '__main__':
     with open('four_by_four_ann.obj', 'wb') as filehandler:
         pickle.dump(ann, filehandler)
     """
-    with open('ann.obj', 'rb') as filehandler:
+    with open('backup0.obj', 'rb') as filehandler:
         ann = pickle.load(filehandler)
     white, black = 0,0
-    for i in range(3000):
+    for i in range(100):
         print(i)
-        game = Othello(4,4,'random','td',ann=ann)
+        game = Othello(8,8,'td','td',ann=ann)
         game.newGame()
         while not game.end:
             game.next_move(None)
