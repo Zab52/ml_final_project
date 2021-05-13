@@ -277,33 +277,3 @@ class Othello():
                             count -= 1
 
         return board
-
-
-if __name__ == '__main__':
-    """
-    ann = ANN(16,10,1,0.01)
-    for i in range(50000):
-        print(i)
-        game = Othello(4,4,'td','td',ann)
-        game.newGame()
-        while not game.end:
-            game.next_move(None)
-    with open('four_by_four_ann.obj', 'wb') as filehandler:
-        pickle.dump(ann, filehandler)
-    """
-    with open('backup0.obj', 'rb') as filehandler:
-        ann = pickle.load(filehandler)
-    white, black = 0,0
-    for i in range(100):
-        print(i)
-        game = Othello(8,8,'td','td',ann=ann)
-        game.newGame()
-        while not game.end:
-            game.next_move(None)
-        if game.winner == 1:
-            white += 1
-        elif game.winner == -1:
-            black += 1
-
-    print('White:', white)
-    print('Black', black)
