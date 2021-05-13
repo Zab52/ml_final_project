@@ -1,11 +1,15 @@
 from backpropagation import ANN
 from othello import Othello
-from time import time
 import pickle
 import argparse
 
+"""
+File to train the learner on a given number of games
+Will backup the ANN to a file a given number of times
+"""
 
 if __name__ == '__main__':
+    #parse args
     parser = argparse.ArgumentParser(description='Size of the board and type of Players')
     parser.add_argument("-squares", help="The size of the square Othello board",
                         type=int, default=8)
@@ -17,25 +21,29 @@ if __name__ == '__main__':
                         type=float, default=0.1)
     parser.add_argument("-games", help="The number of games to learn from",
                         type=int, default=1000)
+    parser.add_argument("-backup", help="How often we want to backup (in games)",
+                        type=int, default=10000)
     parser.add_argument("-filename", help="The name of the file to pickle the ann",default='ann.obj')
     args = parser.parse_args()
 
 
+    #learn
     ann = ANN(args.squares**2,args.hidden,1,args.learningRate)
-
-    explo = args.explorationRate
-
     for i in range(args.games):
-        if i%1000 == 0:
-            with open('backup' + str(int(i/1000)) + '.obj', 'wb') as filehandler:
+        if i%args.backup == 0:
+            #backup the ANN at its current state
+            with open('backup_' + str(i//args.backup) + args.filename, 'wb') as filehandler:
                 pickle.dump(ann, filehandler)
-        newExplo = explo * (1-(i/args.games))
-        print('Game', i)
+        newExplo = args.explorationRate * (1-(i/args.games)) #linearly decrease exploration
+        print('Game', i) #for sanity
+
+        #play game
         game = Othello(args.squares,args.squares,'td','td',ann=ann,learning=True,
                         explorationRate=newExplo)
         game.newGame()
         while not game.end:
             game.next_move(None)
 
+    #save final network
     with open(args.filename, 'wb') as filehandler:
         pickle.dump(ann, filehandler)

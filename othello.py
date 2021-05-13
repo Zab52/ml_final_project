@@ -15,6 +15,10 @@ class Othello():
         self.cols = cols
         self.rows = rows
         self.board = [[0 for i in range(cols)] for j in range(rows)]
+
+        #make users of the type desired
+        #black is -1
+        #white is 1
         self.black = self.make_user(black,-1,ann,learning,explorationRate, filename)
         self.white = self.make_user(white,1,ann,learning,explorationRate, filename)
         self.playerTurn = 0
@@ -82,6 +86,7 @@ class Othello():
         # Move isn't valid.
         return 0
 
+    #given a move, update the board accordingly
     def updateBoard(self, row, col):
         self.board[col][row] = self.playerTurn
 
