@@ -90,9 +90,8 @@ class TDPlayer(Player):
         moves = self.game.find_moves()
         best = float('-inf')
         for move in moves:
-            after_game = deepcopy(self.game)
-            after_game.playMove(move)
-            input = self.create_input_vector(after_game.board)
+            after_game = self.game.simulate_next_move(move)
+            input = self.create_input_vector(after_game)
             current = self.ann.classify(input)[0]
             if current > best:
                 best = current
