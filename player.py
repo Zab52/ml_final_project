@@ -38,8 +38,8 @@ class HeurPlayer(Player):
         for move in moves:
             after_game = self.game.simulate_next_move(move)
             score = 0
-            for i in range(game.rows):
-                for j in range(game.cols):
+            for i in range(self.game.rows):
+                for j in range(self.game.cols):
                     score += after_game[i][j] * self.weights[i][j]
             score *= self.i
             if score > best_score:

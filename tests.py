@@ -20,19 +20,19 @@ def sim_game(game):
 
 
 def random_games(ann,sqaures,num_games,white,black):
-    white, black, ties = 0,0,0
+    white_wins, black_wins, ties = 0,0,0
     for i in range(num_games):
         print(i)
         game = Othello(args.squares,args.squares,white,black,ann=ann)
         game.newGame()
         winner = sim_game(game)
         if winner == 1:
-            white += 1
+            white_wins += 1
         elif winner == -1:
-            black += 1
+            black_wins += 1
         else:
             ties += 1
-    return white, black, ties
+    return white_wins, black_wins, ties
 
 def make_games(current_games,moves_remaining):
     if moves_remaining == 0:
@@ -47,7 +47,7 @@ def make_games(current_games,moves_remaining):
         return make_games(next_games,moves_remaining-1)
 
 def heur_games(ann,squares,white,black):
-    white, black, ties = 0,0,0
+    white_wins, black_wins, ties = 0,0,0
     start = Othello(args.squares,args.squares,white,black,ann=ann)
     start.newGame()
     games = make_games([start],4)
@@ -57,12 +57,12 @@ def heur_games(ann,squares,white,black):
         winner = sim_game(game)
         i += 1
         if winner == 1:
-            white += 1
+            white_wins += 1
         elif winner == -1:
-            black += 1
+            black_wins += 1
         else:
             ties += 1
-    return white, black, ties
+    return white_wins, black_wins, ties
 
 
 if __name__ == '__main__':
