@@ -4,8 +4,8 @@ import pickle
 import argparse
 
 """
-File to train the learner on a given number of games
-Will backup the ANN to a file a given number of times
+Script to train the learner on a given number of games
+Will also backup the ANN to a file a given number of times
 """
 
 if __name__ == '__main__':
@@ -17,7 +17,7 @@ if __name__ == '__main__':
                         type=int, default=50)
     parser.add_argument("-learningRate", help="The learning rate of the neural net",
                         type=float, default=0.01)
-    parser.add_argument("-explorationRate", help="The exploration rate of our learner",
+    parser.add_argument("-exploration_rate", help="The exploration rate of our learner",
                         type=float, default=0.1)
     parser.add_argument("-games", help="The number of games to learn from",
                         type=int, default=1000)
@@ -30,17 +30,17 @@ if __name__ == '__main__':
     #learn
     ann = ANN(args.squares**2,args.hidden,1,args.learningRate)
     for i in range(args.games):
-        if i%args.backup == 0:
+        if i%args.backup == 0 or i == 10000:
             #backup the ANN at its current state
             with open('backup_' + str(i//args.backup) + args.filename, 'wb') as filehandler:
                 pickle.dump(ann, filehandler)
-        newExplo = args.explorationRate * (1-(i/args.games)) #linearly decrease exploration
+        newExplo = args.exploration_rate * (1-(i/args.games)) #linearly decrease exploration
         print('Game', i) #for sanity
 
         #play game
         game = Othello(args.squares,args.squares,'td','td',ann=ann,learning=True,
-                        explorationRate=newExplo)
-        game.newGame()
+                        exploration_rate=newExplo)
+        game.new_game()
         while not game.end:
             game.next_move(None)
 

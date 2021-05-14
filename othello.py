@@ -6,12 +6,16 @@ import pickle
 from backpropagation import ANN
 from player import Player, RandomPlayer, HeurPlayer, UserPlayer, TDPlayer
 
-# Class to store a game of Othello.
+"""
+Store a game of othello, including board information and player information
+Provides methods to find playable moves and update board according to given move
+"""
+
 class Othello():
 
     # Initializing the Othello game for any size board.
     def __init__(self, cols, rows, white, black, ann=None,learning=False,
-                 explorationRate=0, filename=None):
+                 exploration_rate=0):
         self.cols = cols
         self.rows = rows
         self.board = [[0 for i in range(cols)] for j in range(rows)]
@@ -19,15 +23,17 @@ class Othello():
         #make users of the type desired
         #black is -1
         #white is 1
-        self.black = self.make_user(black,-1,ann,learning,explorationRate, filename)
-        self.white = self.make_user(white,1,ann,learning,explorationRate, filename)
-        self.playerTurn = 0
+        self.black = self.make_user(black,-1,ann,learning,exploration_rate)
+        self.white = self.make_user(white,1,ann,learning,exploration_rate)
+        self.player_turn = 0
         self.end = False
         self.winner = 0
-        self.openMoves = []
+
+        # Stores locations on the board that don't have pieces.
+        self.open_moves = []
 
     #create our players based on arguments passed in
-    def make_user(self,player,i,ann,learning,explorationRate, filename):
+    def make_user(self,player,i,ann,learning,exploration_rate):
         if player == 'user':
             return UserPlayer(self,i)
         elif player == 'random':
@@ -35,13 +41,10 @@ class Othello():
         elif player == 'heur':
             return HeurPlayer(self,i)
         else:
-            if filename:
-                with open(filename,'rb') as filehandler:
-                    ann = pickle.load(filehandler)
-            return TDPlayer(self,i,ann=ann,learning=learning,explorationFactor=explorationRate)
+            return TDPlayer(self,i,ann=ann,learning=learning,explorationFactor=exploration_rate)
 
     # Function to check if a move is outside the board.
-    def outOfBounds(self,row, col):
+    def out_of_bounds(self,row, col):
         if (row < 0 or row >= self.rows or col < 0 or col >= self.cols):
             return 1
 
@@ -50,7 +53,7 @@ class Othello():
     # Given a move, this function checks to see if the move is valid for
     # the given game of Othello. Returns 1 if the move is valid. Otherwise,
     # returns 0.
-    def isMoveValid(self, move):
+    def is_move_valid(self, move):
         row, col = move
 
         # Checking to see if the specified move on the board is empty.
@@ -62,111 +65,136 @@ class Othello():
         # Checking around the move specified to check if it is valid.
         for v,h in directions:
             # Checking each of the adjacent tiles of the board.
-            checkRow = row + v
-            checkCol = col + h
+            check_row = row + v
+            check_col = col + h
 
             #check that theres one other piece first
-            if ((not self.outOfBounds(checkRow, checkCol)) and
-                self.board[checkCol][checkRow] == -1*self.playerTurn):
-                checkRow += v
-                checkCol += h
+            if ((not self.out_of_bounds(check_row, check_col)) and
+                self.board[check_col][check_row] == -1*self.player_turn):
+                check_row += v
+                check_col += h
 
                 # Continuing in the same direction until a tile is found that
                 # is either out of bounds, or not an opponent's piece.
-                while ((not self.outOfBounds(checkRow, checkCol)) and
-                    self.board[checkCol][checkRow] == -1*self.playerTurn):
-                    checkRow += v
-                    checkCol += h
+                while ((not self.out_of_bounds(check_row, check_col)) and
+                    self.board[check_col][check_row] == -1*self.player_turn):
+                    check_row += v
+                    check_col += h
 
                 # Checking each of the adjacent tiles of the board.
                 # Case where the move must be valid.
-                if ((not self.outOfBounds(checkRow, checkCol)) and
-                    self.board[checkCol][checkRow] == self.playerTurn):
+                if ((not self.out_of_bounds(check_row, check_col)) and
+                    self.board[check_col][check_row] == self.player_turn):
                     return 1
 
         # Move isn't valid.
         return 0
 
     #given a move, update the board accordingly
-    def updateBoard(self, row, col):
-        self.board[col][row] = self.playerTurn
+    def update_board(self, row, col):
+        self.open_moves.remove((row, col))
 
-        self.openMoves.remove((row, col))
+        #placing the move on the board
+        self.update_board_helper(row, col, self.board)
+
+    #given a move, creates a copy of the resulting board without updating
+    #the actual board of the game.
+    def simulate_next_move(self, move):
+        board = copy.deepcopy(self.board)
+
+        row = move[0]
+        col = move[1]
+
+        #simulating placing the specified move on the board.
+        self.update_board_helper(row, col, board)
+
+        return board
+
+    #given a move and a board, places the move on the board.
+    def update_board_helper(self, row, col, board):
+        board[col][row] = self.player_turn
 
         directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
 
         # Checking around the move specified to check if it is valid.
         for v,h in directions:
             # Checking each of the adjacent tiles of the board.
-            checkRow = row + v
-            checkCol = col + h
+            check_row = row + v
+            check_col = col + h
 
             count = 0
 
             #check that theres one other piece first
-            if ((not self.outOfBounds(checkRow, checkCol)) and
-                self.board[checkCol][checkRow] == -1*self.playerTurn):
-                checkRow += v
-                checkCol += h
+            if ((not self.out_of_bounds(check_row, check_col)) and
+                board[check_col][check_row] == -1*self.player_turn):
+                check_row += v
+                check_col += h
                 count += 1
 
                 # Continuing in the same direction until a tile is found that
                 # is either out of bounds, or not an opponent's piece.
-                while ((not self.outOfBounds(checkRow, checkCol)) and
-                    self.board[checkCol][checkRow] == -1*self.playerTurn):
-                    checkRow += v
-                    checkCol += h
+                while ((not self.out_of_bounds(check_row, check_col)) and
+                    board[check_col][check_row] == -1*self.player_turn):
+                    check_row += v
+                    check_col += h
                     count += 1
 
-                # Checking each of the adjacent tiles of the board.
-                # Case where the move must be valid.
-                if ((not self.outOfBounds(checkRow, checkCol)) and
-                    self.board[checkCol][checkRow] == self.playerTurn):
-                        checkRow -= v
-                        checkCol -= h
+                # Case where one of the player's pieces are found, implying
+                # pieces have been captured.
+                if ((not self.out_of_bounds(check_row, check_col)) and
+                    board[check_col][check_row] == self.player_turn):
+                        check_row -= v
+                        check_col -= h
 
-
+                        # Flipping each piece captured by the move.
                         while count > 0:
-                            self.board[checkCol][checkRow] = self.playerTurn
-                            checkRow -= v
-                            checkCol -= h
+                            board[check_col][check_row] = self.player_turn
+                            check_row -= v
+                            check_col -= h
                             count -= 1
 
 
+
     # Function to start a new game.
-    def newGame(self):
+    def new_game(self):
+
+        #Initializing the board to being empty.
         for row in self.board:
             for i in range(self.cols):
                 row[i] = 0
 
-        midRow = self.rows//2 -1
-        midCol = self.cols//2 -1
+        # Adding in the starting pieces for the game.
+        mid_row = self.rows//2 -1
+        mid_col = self.cols//2 -1
 
-        self.board[midRow][midCol] = 1
-        self.board[midRow + 1][midCol+1] = 1
-        self.board[midRow+1][midCol] = -1
-        self.board[midRow][midCol+1] = -1
+        self.board[mid_row][mid_col] = 1
+        self.board[mid_row + 1][mid_col+1] = 1
+        self.board[mid_row+1][mid_col] = -1
+        self.board[mid_row][mid_col+1] = -1
 
-
+        # Creating the open moves array.
+        self.open_moves = []
         for i in range(self.rows):
             for n in range(self.cols):
                 if self.board[i][n] == 0:
-                    self.openMoves.append((i,n))
+                    self.open_moves.append((i,n))
 
-        self.playerTurn = -1
+        # Setting the player turn.
+        self.player_turn = -1
         self.end = False
+        self.winner = 0
 
     # Function to check if the current player has any valid moves.
-    def searchMoves(self):
-        for move in self.openMoves:
-            if self.isMoveValid(move):
+    def search_moves(self):
+        for move in self.open_moves:
+            if self.is_move_valid(move):
                 return 1
 
         return 0
 
     # Called when the game is over. Returns 0 if the game is a draw. Otherwise
     # returns the winner (-1 or 1).
-    def gameOver(self):
+    def game_over(self):
         score = 0
         self.end = True
 
@@ -197,83 +225,31 @@ class Othello():
     # Function to play a given move. If a moved is played, also checks if the
     # game has ended, or if the next player doesn't have any valid moves.
     # Returns 1 if the move was valid, otherwise, returns 0.
-    def playMove(self, move):
-        self.updateBoard(move[0], move[1])
-        self.playerTurn *= -1
+    def play_move(self, move):
+        self.update_board(move[0], move[1])
+        self.player_turn *= -1
 
         # Checking to see if the players have valid moves.
-        if not self.searchMoves():
-            self.playerTurn *= -1
-            if not self.searchMoves():
-                self.gameOver()
+        if not self.search_moves():
+            self.player_turn *= -1
+            if not self.search_moves():
+                self.game_over()
         return 1
 
     #return a list of valid moves
     def find_moves(self):
         moves = []
-        for move in self.openMoves:
-            if self.isMoveValid(move):
+        for move in self.open_moves:
+            if self.is_move_valid(move):
                 moves.append(move)
-
 
         return moves
 
-    #make the next move
+    #prompt the correct player object to make the next move
     def next_move(self,user_move):
         if self.end:
             return False
-        if self.playerTurn == -1:
+        if self.player_turn == -1:
             return self.black.make_move(user_move)
         else:
             return self.white.make_move(user_move)
-
-
-    def simulate_next_move(self, move):
-
-        board = copy.deepcopy(self.board)
-
-        row = move[0]
-        col = move[1]
-
-        board[col][row] = self.playerTurn
-
-        directions = [(0,1), (1,0), (1,1), (-1,-1), (-1,0), (0,-1), (1,-1), (-1,1)]
-
-        # Checking around the move specified to check if it is valid.
-        for v,h in directions:
-            # Checking each of the adjacent tiles of the board.
-            checkRow = row + v
-            checkCol = col + h
-
-            count = 0
-
-            #check that theres one other piece first
-            if ((not self.outOfBounds(checkRow, checkCol)) and
-                board[checkCol][checkRow] == -1*self.playerTurn):
-                checkRow += v
-                checkCol += h
-                count += 1
-
-                # Continuing in the same direction until a tile is found that
-                # is either out of bounds, or not an opponent's piece.
-                while ((not self.outOfBounds(checkRow, checkCol)) and
-                    board[checkCol][checkRow] == -1*self.playerTurn):
-                    checkRow += v
-                    checkCol += h
-                    count += 1
-
-                # Checking each of the adjacent tiles of the board.
-                # Case where the move must be valid.
-                if ((not self.outOfBounds(checkRow, checkCol)) and
-                    board[checkCol][checkRow] == self.playerTurn):
-                        checkRow -= v
-                        checkCol -= h
-
-
-                        while count > 0:
-                            board[checkCol][checkRow] = self.playerTurn
-                            checkRow -= v
-                            checkCol -= h
-                            count -= 1
-
-        return board

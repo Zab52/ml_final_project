@@ -2,11 +2,12 @@ import tkinter as tk
 import argparse
 import pickle
 from othello import Othello
+from backpropagation import ANN
 
 """
 The code for the graphical user interface
 Displays games in the usual Othello style
-Can simulate games with or against any type of player
+Can simulate games with and against any type of player
 """
 
 size = 80 #the size of a cell in pixels
@@ -19,8 +20,8 @@ class GUI():
         self.root = tk.Tk()
         self.btn = tk.Button(self.root, text = 'New Game', bd = '5')
         self.btn.bind("<Button-1>", self.new_game)
-        self.game = Othello(squares,squares,white,black,filename=ann)
-        self.game.newGame()
+        self.game = Othello(squares,squares,white,black,ann=ann)
+        self.game.new_game()
         self.size = 80
         self.canvas = tk.Canvas(self.root, bg="green", height=self.size*self.game.cols,
                                      width=self.size*self.game.rows)
@@ -64,7 +65,7 @@ class GUI():
                 winner = 'White' if self.game.winner == 1 else 'Black'
                 self.turn_label.configure(text=f'Game Over. {winner} won!')
         else:
-            player = 'White' if self.game.playerTurn == 1 else 'Black'
+            player = 'White' if self.game.player_turn == 1 else 'Black'
             self.turn_label.configure(text=f'It is now {player}\'s turn.')
 
     #after a turn, place a flip pieces accordingly
@@ -96,7 +97,13 @@ if __name__ == '__main__':
                         default='user', choices=['user', 'random', 'heur', 'td'])
     parser.add_argument("-white", help="The type of the white player",
                         default='random', choices=['user', 'random', 'heur', 'td'])
-    parser.add_argument("-ann", help="The filename storing the pickled ann",default=None)
+    parser.add_argument("-filename", help="The filename storing the pickled ann",default=None)
     args = parser.parse_args()
 
-    app = GUI(args.squares,args.white,args.black,args.ann)
+    #if supplied a neural net, use it
+    ann = None
+    if args.filename:
+        with open(args.filename, 'rb') as filehandler:
+            ann = pickle.load(filehandler)
+
+    app = GUI(args.squares,args.white,args.black,ann)

@@ -3,6 +3,11 @@ import copy
 import random
 import math
 
+"""
+A multilayer perceptron with one hidden layer
+Reused from week 5 with with minimal changes 
+"""
+
 #calcluate sigmoid function
 def sigmoid(x):
     return 1/(1+math.exp(-x))

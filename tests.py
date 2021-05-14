@@ -11,8 +11,6 @@ Outputs score of n games vs. random player, 276 games vs heuristic
 """
 
 
-
-
 def sim_game(game):
     while not game.end:
         game.next_move(None)
@@ -21,10 +19,10 @@ def sim_game(game):
 
 def random_games(ann,sqaures,num_games,white,black):
     white_wins, black_wins, ties = 0,0,0
+    game = Othello(args.squares,args.squares,white,black,ann=ann)
     for i in range(num_games):
         print(i)
-        game = Othello(args.squares,args.squares,white,black,ann=ann)
-        game.newGame()
+        game.new_game()
         winner = sim_game(game)
         if winner == 1:
             white_wins += 1
@@ -42,14 +40,14 @@ def make_games(current_games,moves_remaining):
         for game in current_games:
             for move in game.find_moves():
                 new = deepcopy(game)
-                new.playMove(move)
+                new.play_move(move)
                 next_games.append(new)
         return make_games(next_games,moves_remaining-1)
 
 def heur_games(ann,squares,white,black):
     white_wins, black_wins, ties = 0,0,0
     start = Othello(args.squares,args.squares,white,black,ann=ann)
-    start.newGame()
+    start.new_game()
     games = make_games([start],4)
     i = 0
     for game in games:
