@@ -36,12 +36,11 @@ class HeurPlayer(Player):
         best = None
         best_score = float('-inf')
         for move in moves:
-            after_game = deepcopy(self.game)
-            after_game.playMove(move)
+            after_game = self.game.simulate_next_move(move)
             score = 0
-            for i in range(after_game.rows):
-                for j in range(after_game.cols):
-                    score += after_game.board[i][j] * self.weights[i][j]
+            for i in range(game.rows):
+                for j in range(game.cols):
+                    score += after_game[i][j] * self.weights[i][j]
             score *= self.i
             if score > best_score:
                 best_score = score
