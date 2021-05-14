@@ -89,8 +89,8 @@ if __name__ == '__main__':
         print('Random:', rand + new_rand)
         print('Ties:', ties + new_ties)
     else:
-        learner, heur, ties = heur_games(ann,args.squares,'random','td')
-        new_heur, new_learner, new_ties = heur_games(ann,args.squares,'td','random')
+        learner, heur, ties = heur_games(ann,args.squares,'td','heur')
+        new_heur, new_learner, new_ties = heur_games(ann,args.squares,'heur','td')
         print('Heuristic Stats:')
         print('Learner:', learner + new_learner)
         print('Heuristic:', heur + new_heur)
