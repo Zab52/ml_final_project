@@ -13,7 +13,7 @@ class Player():
         self.game = game
         self.i = i
 
-    def make_move(self,_):
+    def make_move(self,m,values):
         pass
 
 #random player class
@@ -22,7 +22,7 @@ class RandomPlayer(Player):
         Player.__init__(self,game,i)
 
     #find valid moves and pick one randomly
-    def make_move(self,_):
+    def make_move(self,m,values):
         moves = self.game.find_moves()
         self.game.play_move(random.choice(moves))
         return True
@@ -43,7 +43,7 @@ class HeurPlayer(Player):
 
     #pick a move by finding valid moves, evaluating the value of each using
     #the linear function from van der Ree and Wiering, and pick the best
-    def make_move(self,_):
+    def make_move(self,m,values):
         moves = self.game.find_moves()
         best = None
         best_score = float('-inf')
@@ -57,6 +57,9 @@ class HeurPlayer(Player):
                     score += after_game[i][j] * self.weights[i][j]
             score *= self.i
 
+            #print value of move for visualization purposes
+            if values:
+                print(f'Move: {move}, Value: {score}')
             #find best
             if score > best_score:
                 best_score = score
@@ -71,7 +74,7 @@ class UserPlayer(Player):
 
     #if move was valid (if user clicked on a 'good') square, make move
     #else do nothing
-    def make_move(self,m):
+    def make_move(self,m,values):
         if self.game.is_move_valid(m):
             self.game.play_move(m)
             return True
@@ -101,23 +104,26 @@ class TDPlayer(Player):
         return input
 
     #make the next move, and either learn from it or not
-    def make_move(self,_):
+    def make_move(self,m,values):
         if self.learning:
             return self.make_move_and_learn()
         else:
-            move, _ = self.get_best_move()
+            move, _ = self.get_best_move(values)
             self.game.play_move(move)
             return True
 
     #find the best move from the neural net
     #return move and value of the afterstate
-    def get_best_move(self):
+    def get_best_move(self,values):
         moves = self.game.find_moves()
         best = float('-inf')
         for move in moves:
             after_game = self.game.simulate_next_move(move)
             input = self.create_input_vector(after_game)
             current = self.ann.classify(input)[0]
+            #print value of move for visualization purposes
+            if values:
+                print(f'Move: {move}, Value: {current}')
             if current > best:
                 best = current
                 bestMove = move

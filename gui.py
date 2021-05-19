@@ -15,8 +15,8 @@ size = 80 #the size of a cell in pixels
 class GUI():
 
     #make the GUI, initialize everything to start the game
-    def __init__(self, squares, white, black,ann):
-        self.squares, self.white, self.black, self.ann = squares, white, black, ann
+    def __init__(self, squares, white, black,ann,values):
+        self.squares, self.white, self.black, self.ann, self.values = squares, white, black, ann, values
         self.root = tk.Tk()
         self.btn = tk.Button(self.root, text = 'New Game', bd = '5')
         self.btn.bind("<Button-1>", self.new_game)
@@ -41,7 +41,7 @@ class GUI():
     #start a new game from scratch if requested
     def new_game(self,event):
         self.root.destroy()
-        self.__init__(self.squares,self.white,self.black, self.ann)
+        self.__init__(self.squares,self.white,self.black, self.ann,self.values)
 
     #make the othello board
     def make_canvas(self):
@@ -82,8 +82,10 @@ class GUI():
     #if any other type of user, just make their move on click
     def make_move(self,event):
         move = event.y//size, event.x//size
-        success = self.game.next_move(move)
+        success = self.game.next_move(move,values=self.values)
         if success:
+            if self.values:
+                print('Next Turn:')
             self.update_game()
             self.show_score()
             self.update_turn()
@@ -98,6 +100,8 @@ if __name__ == '__main__':
     parser.add_argument("-white", help="The type of the white player",
                         default='random', choices=['user', 'random', 'heur', 'td'])
     parser.add_argument("-filename", help="The filename storing the pickled ann",default=None)
+    parser.add_argument("--values", action='store_true',
+                        help="Prints td/heur estimated values to stdout for each move")
     args = parser.parse_args()
 
     #if supplied a neural net, use it
@@ -106,4 +110,4 @@ if __name__ == '__main__':
         with open(args.filename, 'rb') as filehandler:
             ann = pickle.load(filehandler)
 
-    app = GUI(args.squares,args.white,args.black,ann)
+    app = GUI(args.squares,args.white,args.black,ann,args.values)

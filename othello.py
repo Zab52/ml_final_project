@@ -246,10 +246,10 @@ class Othello():
         return moves
 
     #prompt the correct player object to make the next move
-    def next_move(self,user_move):
+    def next_move(self,user_move,values=False):
         if self.end:
             return False
         if self.player_turn == -1:
-            return self.black.make_move(user_move)
+            return self.black.make_move(user_move,values)
         else:
-            return self.white.make_move(user_move)
+            return self.white.make_move(user_move,values)
