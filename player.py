@@ -11,6 +11,8 @@ pick their next move and (in the case of the td player) learn
 class Player():
     def __init__(self,game,i):
         self.game = game
+
+        #player color
         self.i = i
 
     def make_move(self,m,values):
@@ -31,7 +33,7 @@ class RandomPlayer(Player):
 class HeurPlayer(Player):
     def __init__(self,game,i):
         Player.__init__(self,game,i)
-        #initialize evaluation matrix
+        #initializing evaluation matrix
         self.weights = [[100,-25,10,5,5,10,-25,100],
                         [-25,-25,2,2,2,2,-25,-25],
                         [10,2,5,1,1,5,2,10],
@@ -42,16 +44,17 @@ class HeurPlayer(Player):
                         [100,-25,10,5,5,10,-25,100]]
 
     #pick a move by finding valid moves, evaluating the value of each using
-    #the linear function from van der Ree and Wiering, and pick the best
+    #the linear function from van der Ree and Wiering, and picking the best
     def make_move(self,m,values):
         moves = self.game.find_moves()
         best = None
         best_score = float('-inf')
+
         for move in moves:
             after_game = self.game.simulate_next_move(move)
             score = 0
-            #evaluation function
 
+            #evaluation function
             for i in range(self.game.rows):
                 for j in range(self.game.cols):
                     score += after_game[i][j] * self.weights[i][j]
@@ -60,14 +63,16 @@ class HeurPlayer(Player):
             #print value of move for visualization purposes
             if values:
                 print(f'Move: {move}, Value: {score}')
+
             #find best
             if score > best_score:
                 best_score = score
                 best = move
+
         self.game.play_move(best)
         return True
 
-#Allows the user to make a move
+#allows the user to make a move
 class UserPlayer(Player):
     def __init__(self,game,i):
         Player.__init__(self,game,i)
@@ -80,7 +85,7 @@ class UserPlayer(Player):
             return True
         return False
 
-#Our learning player
+#our learning player
 class TDPlayer(Player):
     def __init__(self,game,i,ann=None,explorationFactor=0.1,learning=False):
         Player.__init__(self,game,i)

@@ -29,7 +29,7 @@ class Othello():
         self.end = False
         self.winner = 0
 
-        # Stores locations on the board that don't have pieces.
+        # Stores squares on the board that don't have pieces.
         self.open_moves = []
 
     #create our players based on arguments passed in
