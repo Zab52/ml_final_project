@@ -5,18 +5,20 @@ import pickle
 import argparse
 
 """
-A file to run the tests given a learner
-Will player the learner against both a random player and a heuristic player
-Outputs score of n games vs. random player, 276 games vs heuristic
+A file to run tests given a learner.
+Can have the learner play against either a random player, or a heuristic player.
+Outputs a score of n games vs. random player.
+Outputs a score of 488 games vs. heuristic player.
 """
 
-
+# Function that plays a game of Othello until it is finished.
 def sim_game(game):
     while not game.end:
         game.next_move(None)
     return game.winner
 
-
+# Simulates num_games games starting from the start of an Othello game.
+# Used for testing the learner against the random player.
 def random_games(ann,sqaures,num_games,white,black):
     white_wins, black_wins, ties = 0,0,0
     game = Othello(args.squares,args.squares,white,black,ann=ann)
@@ -32,6 +34,9 @@ def random_games(ann,sqaures,num_games,white,black):
             ties += 1
     return white_wins, black_wins, ties
 
+# Returns a list of Othello games where each game corrsponds to
+# a gamestate after moves_remaining moves are played given the initially
+# inputted gamestate.
 def make_games(current_games,moves_remaining):
     if moves_remaining == 0:
         return current_games
@@ -44,12 +49,19 @@ def make_games(current_games,moves_remaining):
                 next_games.append(new)
         return make_games(next_games,moves_remaining-1)
 
+# Simulates games starting from 1 of 244 different possible initial
+# gamestates. These gamestates correspond to all the possible
+# gamestates after four moves are initially played.
 def heur_games(ann,squares,white,black):
     white_wins, black_wins, ties = 0,0,0
     start = Othello(args.squares,args.squares,white,black,ann=ann)
     start.new_game()
+
+    # Creating each of the possible intial board states to be considered.
     games = make_games([start],4)
     i = 0
+
+    # Simulating games starting from each of the initial boards constructed.
     for game in games:
         print('Game', i)
         winner = sim_game(game)
@@ -86,6 +98,7 @@ if __name__ == '__main__':
         print('Learner:', learner + new_learner)
         print('Random:', rand + new_rand)
         print('Ties:', ties + new_ties)
+        print('Percent wins:', ((learner+new_learner) / args.games))
     else:
         learner, heur, ties = heur_games(ann,args.squares,'td','heur')
         new_heur, new_learner, new_ties = heur_games(ann,args.squares,'heur','td')
@@ -93,3 +106,4 @@ if __name__ == '__main__':
         print('Learner:', learner + new_learner)
         print('Heuristic:', heur + new_heur)
         print('Ties:', ties + new_ties)
+        print('Percent wins:', ((learner+new_learner) / 488))
