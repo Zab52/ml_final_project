@@ -146,7 +146,7 @@ class TDPlayer(Player):
             newOutput = self.ann.classify(next)[0]
         else:
             #pick best move and get value
-            move, newOutput = self.get_best_move()
+            move, newOutput = self.get_best_move(None)
             self.game.play_move(move)
 
         #backpropagate the error in the value of the previous state
